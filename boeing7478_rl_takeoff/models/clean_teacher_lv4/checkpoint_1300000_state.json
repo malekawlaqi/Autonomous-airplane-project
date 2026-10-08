@@ -1,0 +1,334 @@
+{
+  "num_timesteps": 1300000,
+  "curriculum": {
+    "level": 3,
+    "history": [
+      {
+        "timesteps": 25000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 50000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 75000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 100000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.4,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 125000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 150000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 175000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 200000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 225000.0,
+        "level": 1.0,
+        "eval_success_rate": 1.0,
+        "advanced": 1.0
+      },
+      {
+        "timesteps": 250000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 275000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 300000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.25,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 325000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.1,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 350000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.1,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 375000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.15,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 400000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 425000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 450000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.1,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 475000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 500000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 525000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.1,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 550000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 575000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.3,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 600000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 625000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.25,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 650000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.1,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 675000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.35,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 700000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.35,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 725000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.25,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 750000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.2,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 775000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 800000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.2,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 825000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.05,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 850000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.25,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 875000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.35,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 900000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.45,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 925000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.15,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 950000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.5,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 975000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.65,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1000000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.35,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1025000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.45,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1050000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.8,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1075000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.8,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1100000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.65,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1125000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.65,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1150000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.8,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1175000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.6,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1200000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.8,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1225000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.75,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1250000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.75,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 1275000.0,
+        "level": 2.0,
+        "eval_success_rate": 0.9,
+        "advanced": 1.0
+      },
+      {
+        "timesteps": 1300000.0,
+        "level": 3.0,
+        "eval_success_rate": 0.25,
+        "advanced": 0.0
+      }
+    ]
+  },
+  "milestones": {
+    "steps_to_first_success": 107676,
+    "steps_to_first_success_eval": 100000,
+    "first_success_level": 1,
+    "steps_to_10_percent_success": 249695,
+    "steps_to_50_percent_success": 732075,
+    "steps_to_90_percent_success": 1106454,
+    "eval_steps_to_10_percent_success": 100000,
+    "eval_steps_to_50_percent_success": 225000,
+    "eval_steps_to_90_percent_success": 225000,
+    "success_window_episodes": 100,
+    "unit": "RL environment transitions"
+  },
+  "reward_profile": "clean"
+}

@@ -1,0 +1,118 @@
+# Domain randomization with a 4-level curriculum.
+# Randomization is ACTIVE FROM EPISODE 1 (level 1 is "easy but variable").
+#   Level 1: easy-but-variable      -> learn basic takeoff
+#   Level 2: more wind / mass / CG / runway variation
+#   Level 3: full intended training distribution
+#   Level 4: robustness / generalisation conditions
+#
+# Every range is [min, max], sampled uniformly. These are ESTIMATED engineering ranges
+# for a research simulation, not operational certification data.
+#
+# Notes on what JSBSim supports:
+#   * runway slope: NOT supported (JSBSim ground is flat). Reported as unsupported.
+#   * friction: expressed as multipliers on the FDM tire friction coefficients through the
+#     JSBSim ground/* properties. They are NOT measured braking-action values.
+#   * gusts: first-order Gauss-Markov process injected through atmosphere/wind-*-fps.
+#   * turbulence: JSBSim MIL-F-8785C (turb-type 3) severity 0-7; ~1-2 is "light".
+
+sampling:
+  # Probability that an episode is sampled from a lower level than the current one
+  # (mitigates forgetting as the curriculum advances).
+  lower_level_probability: 0.20
+  gust_time_constant_s: 3.0
+  runway_width_m: 60.0
+  runway_slope: {supported: false}
+
+levels:
+  1:
+    total_weight_frac_mtow: [0.68, 0.78]
+    payload_frac_of_max: [0.25, 1.00]
+    cg_shift_in: [-5.0, 5.0]
+    runway_length_m: [4200.0, 4800.0]
+    runway_elevation_ft: [0.0, 500.0]
+    runway_heading_deg: [0.0, 360.0]
+    static_friction_factor: [0.95, 1.00]
+    rolling_friction_factor: [1.00, 1.00]
+    delta_isa_c: [-3.0, 5.0]
+    qnh_hpa: [1010.0, 1016.0]
+    headwind_kt: [0.0, 8.0]
+    crosswind_abs_kt: [0.0, 4.0]
+    gust_sigma_kt: [0.0, 0.0]
+    turbulence_severity: [0.0, 0.0]
+    initial_lateral_offset_m: [-2.0, 2.0]
+    initial_heading_offset_deg: [-1.0, 1.0]
+    start_along_m: [20.0, 60.0]
+  2:
+    total_weight_frac_mtow: [0.62, 0.88]
+    payload_frac_of_max: [0.25, 1.00]
+    cg_shift_in: [-15.0, 15.0]
+    runway_length_m: [3800.0, 4600.0]
+    runway_elevation_ft: [0.0, 2500.0]
+    runway_heading_deg: [0.0, 360.0]
+    static_friction_factor: [0.80, 1.00]
+    rolling_friction_factor: [1.00, 1.30]
+    delta_isa_c: [-8.0, 12.0]
+    qnh_hpa: [1000.0, 1025.0]
+    headwind_kt: [-2.0, 15.0]
+    crosswind_abs_kt: [0.0, 12.0]
+    gust_sigma_kt: [0.0, 2.0]
+    turbulence_severity: [0.0, 1.0]
+    initial_lateral_offset_m: [-5.0, 5.0]
+    initial_heading_offset_deg: [-3.0, 3.0]
+    start_along_m: [20.0, 60.0]
+  3:
+    total_weight_frac_mtow: [0.58, 0.95]
+    payload_frac_of_max: [0.25, 1.00]
+    cg_shift_in: [-25.0, 25.0]
+    runway_length_m: [3200.0, 4500.0]
+    runway_elevation_ft: [0.0, 5000.0]
+    runway_heading_deg: [0.0, 360.0]
+    static_friction_factor: [0.60, 1.00]
+    rolling_friction_factor: [1.00, 1.60]
+    delta_isa_c: [-15.0, 25.0]
+    qnh_hpa: [985.0, 1035.0]
+    headwind_kt: [-5.0, 25.0]
+    crosswind_abs_kt: [0.0, 20.0]
+    gust_sigma_kt: [0.0, 4.0]
+    turbulence_severity: [0.0, 2.0]
+    initial_lateral_offset_m: [-8.0, 8.0]
+    initial_heading_offset_deg: [-5.0, 5.0]
+    start_along_m: [20.0, 60.0]
+  4:
+    total_weight_frac_mtow: [0.55, 1.00]
+    payload_frac_of_max: [0.25, 1.00]
+    cg_shift_in: [-35.0, 30.0]
+    runway_length_m: [2800.0, 4800.0]
+    runway_elevation_ft: [0.0, 7500.0]
+    runway_heading_deg: [0.0, 360.0]
+    static_friction_factor: [0.35, 1.00]
+    rolling_friction_factor: [1.00, 2.50]
+
+    delta_isa_c: [-25.0, 35.0]
+    qnh_hpa: [970.0, 1045.0]
+    headwind_kt: [-10.0, 30.0]
+    crosswind_abs_kt: [0.0, 30.0]
+    gust_sigma_kt: [0.0, 6.0]
+    turbulence_severity: [0.0, 3.0]
+    initial_lateral_offset_m: [-12.0, 12.0]
+    initial_heading_offset_deg: [-8.0, 8.0]
+    start_along_m: [20.0, 60.0]
+  5:
+    # Slippery/wet-runway curiosity: low tire static friction with strong side slip.
+    total_weight_frac_mtow: [0.60, 1.00]
+    payload_frac_of_max: [0.40, 1.00]
+    cg_shift_in: [-30.0, 25.0]
+    runway_length_m: [3200.0, 4800.0]
+    runway_elevation_ft: [0.0, 5000.0]
+    runway_heading_deg: [0.0, 360.0]
+    static_friction_factor: [0.22, 0.45]   # very slippery (wet/contaminated style)
+    rolling_friction_factor: [1.60, 3.00]  # increased drag on contamination
+    delta_isa_c: [-10.0, 20.0]
+    qnh_hpa: [990.0, 1025.0]
+    headwind_kt: [-2.0, 18.0]
+    crosswind_abs_kt: [0.0, 18.0]
+    gust_sigma_kt: [1.0, 6.0]
+    turbulence_severity: [0.0, 2.0]
+    initial_lateral_offset_m: [-10.0, 10.0]
+    initial_heading_offset_deg: [-6.0, 6.0]
+    start_along_m: [20.0, 60.0]

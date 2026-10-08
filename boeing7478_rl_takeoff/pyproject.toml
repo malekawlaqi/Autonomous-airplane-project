@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boeing7478_rl_takeoff"
+version = "0.1.0"
+description = "Simulation-only RL (SAC) takeoff controller for a Boeing 747-8 research approximation in JSBSim"
+requires-python = ">=3.10"
+dependencies = [
+    "jsbsim>=1.2.0",
+    "gymnasium>=1.0",
+    "stable-baselines3>=2.3",
+    "torch>=2.2",
+    "tensorboard>=2.14",
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+    "PyYAML>=6.0",
+]
+
+[tool.setuptools]
+packages = ["envs", "training", "teacher", "evaluation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]

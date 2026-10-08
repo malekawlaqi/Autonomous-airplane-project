@@ -1,0 +1,69 @@
+# SAC (primary algorithm).  Hyper-parameters follow the project brief; they are STARTING values.
+algorithm: SAC
+run_name: sac
+seed: 0
+device: auto               # auto -> CUDA if torch.cuda.is_available() else CPU
+n_envs: 1                  # JSBSim is CPU-bound; raise (and gradient_steps) if CPU cores allow
+total_timesteps: 5000000   # RL environment transitions (NOT physics steps)
+
+learning_rate: 0.0003
+buffer_size: 1000000
+learning_starts: 10000
+batch_size: 256
+tau: 0.005
+gamma: 0.995
+train_freq: 1
+gradient_steps: 1
+ent_coef: auto
+
+policy:
+  actor_layers: [256, 256, 256]
+  critic_layers: [256, 256, 256]
+  activation: relu         # relu | tanh | elu
+
+evaluation:
+  eval_freq: 25000                 # transitions between deterministic evaluations (curriculum + best model)
+  n_eval_episodes: 20
+  eval_seed_base: 1000000          # evaluation episodes use fixed seeds disjoint from training
+  checkpoint_steps: [50000, 100000, 250000, 500000, 1000000, 2000000, 5000000, 10000000]
+  checkpoint_eval_episodes: 50     # evaluation episodes at each milestone checkpoint
+  periodic_checkpoint_freq: 50000  # rolling checkpoints for resume
+  save_replay_buffer: true         # save replay buffer next to checkpoints (needed for exact resume)
+  success_window_episodes: 100     # rolling training window for steps_to_X_percent_success
+  # Brief: if no sensible takeoff by ~500k transitions, investigate instead of running 10M blindly.
+  stop_if_no_success:
+    enabled: true
+    after_steps: 500000
+
+curriculum:
+  enabled: true
+  success_threshold: 0.80          # evaluation success rate needed to advance a level
+  min_eval_episodes: 20
+  max_level: 5
+
+logging:
+  log_every_steps: 2000            # TensorBoard rollup interval for per-step signals
+  progress_bar: false
+
+paths:
+  models_dir: models
+  logs_dir: logs
+  results_dir: results
+
+# Optional simulation-teacher assistance (see teacher/).  Disabled by default.
+teacher:
+  demonstrations_path: null        # e.g. results/demos/teacher_demos.npz
+  behavior_cloning_epochs: 0       # >0: pretrain the actor with MSE to the teacher actions
+
+# Live 3D showcase (tools/live_viewer.py): replayable "events" written during training.
+showcase:
+  enabled: true
+  training_success_always_until: 100    # record EVERY training success until this many were recorded
+  training_success_min_gap_steps: 5000  # afterwards at most one success event per this many transitions
+  progress_min_delta: 0.10              # new best evaluation success rate (+10 points) counts as "big progress"
+  eval_episodes_recorded: 3             # deterministic episodes recorded per progress event
+  update_every_steps: 50000             # a viewer update (deterministic replays + status headline) EVERY this many transitions
+  update_episodes: 2                    # replays recorded per update
+  max_events: 1000
+  save_model_snapshots: true            # models/<run>/showcase_<steps>_<event>.zip at progress events
+

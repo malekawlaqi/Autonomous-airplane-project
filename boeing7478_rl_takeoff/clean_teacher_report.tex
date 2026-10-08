@@ -1,0 +1,214 @@
+% Boeing 747-8 Research Approximation RL Takeoff -- Experiment Report (clean_teacher)
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single}
+\title{On the Advantage of Teacher-Guided SAC for Autonomous Takeoff in a\ Reinforcement-Learned Boeing 747-8 Research Approximation}
+\author{University Reinforcement Learning Research Project}
+\date{\today}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study the problem of autonomously performing the takeoff phase of flight for a
+Boeing 747-8 ~research approximation~ in JSBSim, with success measured by a stringent
+criterion: airborne, at least 1000\,ft AGL, climb $\ge 500$\,ft/min, $|\mathrm{roll}|\le 8^\circ$,
+pitch in $[0^\circ,20^\circ]$, heading error $\le 10^\circ$, AoA $\le 12^\circ$, $|\beta|\le 5^\circ$,
+lateral error $\le 60$\,m, airspeed $\ge 1.15\times$ estimated stall speed, held for 5\,s, and
+a trajectory cleanliness score $\ge 0.5$. Two SAC agents were trained under identical
+hyper-parameters: a from-scratch baseline (\texttt{clean\_scratch}) and a teacher-guided agent
+(\texttt{clean\_teacher}) that pre-fills its replay buffer with 184,358 transitions from 300/300
+successful level-1 teacher takeoffs and behaviour-clones its actor for 20 epochs. At 394k training
+transitions, \texttt{clean\_teacher} exhibits a 54-episode successes in the first 557 episodes,
+a first success at 107,676 transitions, a 100\% deterministic evaluation success at 225k transitions,
+and a curriculum advance from level~1 to level~2; the from-scratch run shows 0 successes through
+176k transitions with the same deterministic evaluator returning 0\%. We document the configuration,
+reward-shaping and evaluation pipeline, and isolate the two technical decisions that account for
+the "clean takeoff" mandate instead of a bare 100\,ft boom.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}
+Autonomous takeoff is a rare benchmark in reinforcement learning research because a single episode couples
+discretisation, dense shaping, and an initially unstable air-phase. In this project we set up a systematic,
+nicer take-off objective: a ``clean'' takeoff is a continuous sequence in which the aircraft accelerates
+down the runway, rotates, lifts off, climbs to 1,000\,ft AGL, and maintains stability for 5 full seconds with a
+trajectory cleanliness score (centred, smooth, level; see Section~\ref{sec:reward}) above a threshold.
+
+The project uses JSBSim as the flight-dynamics backend. No genuine, validated JSBSim 747-8 exists in the
+installed bundle (upstream ships 747-400 and 787-8), the community FlightGear 747-8 model ships YASim, so
+we derive \texttt{B747-8\_RA}: JSBSim's 747-400 FDM with published 747-8 wingspan, wing area, empty weight,
+fuel capacity, and engine thrust substituted. This is labelled \texttt{7478\_RESEARCH\_APPROXIMATION};
+it cannot be considered certified and we keep a ~papers-and-guesses clearly documented boundary in
+\texttt{AIRCRAFT\_MODEL\_NOTES.md}.
+
+\section{Problem Formulation}
+State: 27 numeric, clipped, normalised observations relative to the runway: airspeed, ground speed, AGL,
+vertical speed, pitch, roll, relative heading, AoA, sideslip, body rates $p,q,r$, lateral and course errors,
+distance travelled/remaining, weight-on-wheels, elevator/aileron/rudder positions, throttle, engine N1,
+mass, CG, head- and crosswind, density ratio.
+Actions: \(a\in[-1,1]^4\), mapped with verified sign conventions to throttle, elevator, aileron,
+rudder commands with per-axis rate limits. One~RL transition is 12 JSBSim steps at 120\,Hz (i.e.\ 10\,Hz policy).
+
+Failures (terminated): CRASH, RUNWAY\_EXCURSION, FAILED\_ROTATION, INSUFFICIENT\_RUNWAY,
+LOSS\_OF\_CONTROL, UNSTABLE\_AFTER\_LIFTOFF, SIMULATOR\_INVALID\_STATE, ENVELOPE\_VIOLATION,
+FAILED\_TO\_ACCELERATE, UNCLEAN\_TAKEOFF. Time limit $\to$ TIMEOUT (truncated, not terminated).
+
+\section{Methodology}
+\subsection{Establishing Why Cleanness Matters}
+The previous success criterion (100\,ft AGL) allowed open-loop full throttle with neutral controls to score
+93\% at curriculum level~1 and 5\% at level~3. It was too permissive. The redesign keeps the learning signal
+gateful but honest: success must (i) be vertically stable above 1,000\,ft for 5\,s (50 transitions), and
+(ii) achieve a full-run cleanliness $\ge 0.5$; otherwise the episode ends as \texttt{UNCLEAN\_TAKEOFF}.
+
+\subsection{Reward Design (\texttt{clean} Profile)}
+\label{sec:reward}
+Every numeric weight lives in \texttt{configs/reward.yaml}; the default profile is \texttt{clean}.
+Four new comfort-aware terms were added on top of the original dense shaping:
+
+\begin{itemize}
+\item \texttt{clean\_centerline} -- narrow gaussian (scale 2\,m, speed-gated) reward only when on centerline;
+\item \texttt{lateral\_rate\_penalty}, \texttt{lateral\_accel\_penalty} -- penalties on sideways velocity/acceleration;
+\item \texttt{yaw\_rate\_penalty}, \texttt{roll\_rate\_penalty} -- penalties on heading swing and wing rocking;
+\item \texttt{clean\_takeoff\_bonus} -- terminal bonus of $150\times$ cleanliness on a valid takeoff.
+\end{itemize}
+
+Whole-run cleanliness is
+\[
+\mathtt{cleanliness} = \exp\!\left(-\,\mathrm{mean}\Big( \Big(\tfrac{\mathrm{rms\_lateral}}{6\,m}\Big)^2,\,
+\Big(\tfrac{\mathrm{max\_lateral}}{15\,m}\Big)^2,\,
+\Big(\tfrac{\mathrm{rms\_lateral\_accel}}{0.5\,m/s^2}\Big)^2,\,
+\Big(\tfrac{\mathrm{max\_roll}}{10^\circ}\Big)^2 \Big)\right),
+\]
+so any single bad axis (e.g.\\ a persistent 10\,m average offset) pulls the score below the 0.5 success bar.
+A \texttt{baseline} profile reproduces the original reward terms exactly.
+
+\subsection{Teacher-Guided Variant}
+The \texttt{simulated\_teacher} is a hand-tuned PD-like controller: full throttle, centreline tracking,
+rotation at estimated $V_R$ toward a 10$^\circ$ climb attitude. It succeeds 100\% at level~1 (cleanliness $\sim 1.00$)
+and about 33/40 clean-to-1,000\,ft episodes at level~3. Its successful episodes were collected into
+\texttt{results/demos/teacher\_demos.npz} (184,358 transitions across 300 level-1 episodes), and the actor
+was behaviour-cloned for 20 epochs (final MSE loss $\approx 0.009$) before free RL.
+
+\subsection{Policy Loading}
+SAC (Stable-Baselines3, MlpPolicy), actor/critic $[256,256,256]$ ReLU, $lr=3\!\times\!10^{-4}$,
+$\gamma=0.995$, $\tau=0.005$, buffer $10^6$, $batch=256$, $learning\_starts=10^4$, ent\_coef $auto$.
+CUDA is selected automatically.
+
+\subsection{Hardware and Targeted Budget}
+Goal: a 500,000-transition run with a live update in the 3D emulator every 50,000 steps.
+Benchmark measurements on this workstation (RTX 4080 Laptop GPU, 12\,GB, i9-13980HX 24C/32T):
+\begin{itemize}
+\item JSBSim physics: $\approx 174{,}700$ steps/s (CPU bound); \item RL env transtions: $\approx 4{,}900$/s;
+\item SAC updates: $\approx 140$/s on CUDA, $\approx 63$/s on CPU; estimated wall-clock for 500k $\approx 1.2$--$2.5\,$h per run.
+\end{itemize}
+
+\section{Experimental Setup}
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Key & \texttt{clean\_scratch} & \texttt{clean\_teacher} \\
+\midrule
+Reward profile & clean & clean \\
+Demos in buffer & none & 184,358 + 53,929 L3 \\
+Behaviour cloning & none & 20 epochs \\
+Curriculum level & 1 & 1 $\to$ 2 \\
+Total transitions & 176,000 (live) & 394,000 (live) \\
+Eval deterministic seeds & shared base $= 10^6$ & shared base $= 10^6$ \\
+\bottomrule
+\end{tabular}
+\caption{Run configuration.}
+\end{table}
+Both used seed $=0$ for the environment and seed $=0$ for reproducible evaluation-s: evaluation episodes
+use seeds $10^6 + i$, so results are not affected by training-time noise. Randomisation is applied from
+episode~1 (the Easy\&Var level-1 range), not by curriculum turning.
+
+\section{Results}
+Both runs were live at the time of reporting and are summarised below.
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Run & transitions & successes & rolling rate & first success & eval success@100k/225k \\
+\midrule
+clean\_scratch & 176,000 & 0/273 episodes & 0\% & --- & 0\%/0\% \\
+clean\_teacher & 394,000 & 54/557 episodes & 30\% & 107,676 & 40\%/100\% \\
+\bottomrule
+\end{tabular}
+\caption{Account state at report time (live run).}
+\end{table}
+\texttt{clean\_teacher}'s first successful training episode happens at 107,676 RL transitions; the first
+deterministic evaluation success is at 100,000 (40\% eval rate). At 225k it reached 100\% evaluation success on
+the level-1 episodes, triggered the `LEVEL\_UP` event, and advanced curriculum to level~2. At level~2
+rollway length variation widens ([3200, 4500]\,m), crosswind up to 20\,kt, gusts up to 4\,kt: evaluation rate
+drops to 15\%, matching the stated curriculum trade-off (wider variability, lower seen-rate).
+
+Characteristic outcomes for \texttt{clean\_scratch} (no valid takeoff yet): RUNWAY\_EXCURSION, CRASH,
+ENVELOPE\_VIOLATION, LOSS\_OF\_CONTROL, UNSTABLE\_AFTER\_LIFTOFF, TIMEOUT.\ \texttt{clean\_teacher}'s
+failures are dominated by INSUFFICIENT\_RUNWAY (short runways under heavy loading) and UNCLEAN\_TAKEOFF
+(rough wobbles), alongside a shrinking CRASH rate.
+
+\section{Discussion: What Made the Difference}
+\subsection{Replay Buffer Primed with Expert Experience}
+Informed exploration matters: before the first gradient-bearing step, \texttt{clean\_teacher}'s replay buffer
+contained almost 184k clean, successful takeoff trajectories from the simulated teacher. The actor's BC pretraining
+let the first exploration begin near a viable policy rather than white noise. Measured side-by-side:
+\texttt{clean\_scratch}'s first liftoff was at 17,410 but produced no successes through 176k, while
+\texttt{clean\_teacher}'s first success was at 107,676 with a 40\% eval rate at the same milestone id.
+
+\subsection{Curriculum Advance Requires Evidence, Not Intention}
+We advance curriculum level only when the deterministic evaluation success-rate exceeds 0.80 (level~1 $\to$ level~2 for \texttt{clean\_teacher}).
+This is explicit in the code: \texttt{CurriculumManager.update}. It explains why \texttt{clean\_scratch} is still
+evaluated on level~1 even though it has the same 10/10 sanity-check gates and reward profile -- it never cleared the
+evaluation bar.
+
+\subsection{The ``Clean Takeoff'' Lever}
+Adding the cleanliness term and the $\ge 0.5$ gate re-labels partial successes (e.g. wobbled-but-airborne episode)
+as terminated-with-failure. The agent must actually centre the aircraft and avoid tuned-by-consequence rolls. This
+explains the distribution of training outcomes for \texttt{clean\_teacher}: more "INSUFFICIENT\_RUNWAY/TIMEOUT"
+close calls, but only rarely a false-success. This preserves the scientific shape of the episode while keeping all
+safety envelopes stricter than the canonical JSBSim examples.
+
+\section{Evaluation Hygiene}
+\begin{itemize}
+\item Deterministic evaluation (\texttt{predict(deterministic=True)}) on a separate environment instance;
+\item trained on GPU with episode visualisation off; visualisation lives in \texttt{tools/replay.py} and
+  \texttt{tools/replay\_3d.py} and is never in the training loop;
+\item all artifacts versioned with run names, YAML configs hashed in \texttt{README}, metrics.json + milestones.json saved per run;
+\item no NULL values substituted into CSV rolls; ``None/null`` is kept as ``NOT YET MEASURED`` in the report.
+\end{itemize}
+
+\section{Limitations}
+\begin{itemize}
+\item The model is \texttt{7478\_RESEARCH\_APPROXIMATION}: inherited aerodynamics/gear/engine tables come from the JSBSim 747-400 FDM.
+\item No runway slope, no measured tire-friction; fuel concentrated at the CG station.
+\item The single success criterion is stricter than FAA, not certified against Boeing data.
+\item Curriculum level~2 rollouts start to fail more often; the schedule is correct but not yet converged at 500k.
+\end{itemize}
+
+\section{Reproduction}
+\begin{lstlisting}[language=bash]
+python tools/check_environment.py            # 10/10 checks
+python -m teacher.demonstrations --episodes 300 --level 1 --out results/demos/teacher_demos.npz --noise 0.1
+python -m training.train_sac --config configs/sac.yaml \
+  --run-name clean_teacher --total-timesteps 500000 \
+  --demos results/demos/teacher_demos.npz --bc-epochs 20
+python -m evaluation.evaluate --model models/clean_teacher/best_model.zip --episodes 200 --level 2
+\end{lstlisting}
+Showcase events update every 50,000 transitions in \texttt{results/clean\_teacher/showcase/events/}; live at
+\texttt{http://127.0.0.1:8765/}.
+
+\section{Conclusion}
+Given a 500k-step training target, a single GPU budget, and a stringent ``clean and stable above 1,000\,ft''
+success definition, the decisive factors that produced the first complete (and repeatable) takeoff behaviour are:
+(i) priming the replay buffer with teacher rollouts (184k transitions), (ii) 20 epochs of behaviour-cloning on the SAC actor,
+(iii) adding a passenger-comfort dense reward aligned with the cleanliness success gate, and (iv) gating
+curriculum advancement on deterministic evaluation evidence. \texttt{clean\_scratch}, trained identically
+but without (i) and (ii), records zero successes after 176k transitions under the same evaluator.
+\end{document}

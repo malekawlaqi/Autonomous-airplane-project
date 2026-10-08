@@ -1,0 +1,16 @@
+# Boeing 747-8 RL takeoff (simulation-only research project)
+# Python 3.10 - 3.13 recommended (verified on 3.13).
+# For CUDA on Windows install torch from the PyTorch CUDA index first, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+jsbsim>=1.2.0
+gymnasium>=1.0
+stable-baselines3>=2.3
+torch>=2.2
+tensorboard>=2.14
+numpy>=1.26
+pandas>=2.0
+matplotlib>=3.8
+PyYAML>=6.0
+tqdm
+rich
+pytest>=8.0

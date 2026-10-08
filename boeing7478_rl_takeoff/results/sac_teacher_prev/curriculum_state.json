@@ -1,0 +1,35 @@
+{
+  "level": 1,
+  "history": [
+    {
+      "timesteps": 25000.0,
+      "level": 1.0,
+      "eval_success_rate": 0.0,
+      "advanced": 0.0
+    },
+    {
+      "timesteps": 50000.0,
+      "level": 1.0,
+      "eval_success_rate": 0.0,
+      "advanced": 0.0
+    },
+    {
+      "timesteps": 75000.0,
+      "level": 1.0,
+      "eval_success_rate": 0.0,
+      "advanced": 0.0
+    },
+    {
+      "timesteps": 100000.0,
+      "level": 1.0,
+      "eval_success_rate": 0.0,
+      "advanced": 0.0
+    },
+    {
+      "timesteps": 125000.0,
+      "level": 1.0,
+      "eval_success_rate": 0.0,
+      "advanced": 0.0
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+# Aircraft configuration for the Boeing 747-8 RESEARCH APPROXIMATION.
+#
+# IMPORTANT: no genuine, validated JSBSim Boeing 747-8 FDM exists in the installed
+# JSBSim package, upstream JSBSim, or (to our knowledge) the open community.
+# (The FlightGear 747-8i is a YASim model.)  The aircraft used here is therefore
+# marked 7478_RESEARCH_APPROXIMATION.  See AIRCRAFT_MODEL_NOTES.md for details.
+#
+# The derived FDM is GENERATED at runtime from the JSBSim-bundled B747 (747-400)
+# FDM by envs/jsbsim_interface.py:build_derived_aircraft(), applying ONLY the
+# overrides listed below.  Every override has a provenance tag:
+#   PUBLIC     = published 747-8 figure (source given)
+#   OTHER_A/C  = value inherited from the JSBSim 747-400 model (not 747-8 data)
+#   ESTIMATED  = engineering assumption made by this project
+
+model_status: 7478_RESEARCH_APPROXIMATION
+derived_model_name: B747-8_RA
+build_dir: models/_aircraft_build
+
+base_model:
+  jsbsim_aircraft_dir: B747        # folder inside the jsbsim package's aircraft/
+  fdm_name: B747-400               # name attribute inside B747.xml (it IS a 747-400)
+
+overrides:
+  wingspan_ft:
+    value: 224.4167                # 224 ft 5 in
+    provenance: PUBLIC
+    source: "Wikipedia 'Boeing 747-8' specifications (Boeing data), 68.40 m"
+  wingarea_ft2:
+    value: 5960
+    provenance: PUBLIC
+    source: "Wikipedia 'Boeing 747-8' specifications, 5,960 sq ft (554 m2)"
+  empty_weight_lbs:
+    value: 485300
+    provenance: PUBLIC
+    source: "Wikipedia 747-8I operating empty weight (OEW) 485,300 lb"
+  fuel_capacity_total_lbs:
+    value: 422328
+    provenance: PUBLIC
+    source: "Wikipedia 747-8I usable fuel 422,328 lb (63,034 US gal)"
+  engine_takeoff_thrust_lbf:
+    value: 66500
+    provenance: PUBLIC
+    source: "Wikipedia GEnx data sheet, GEnx-2B67 takeoff thrust 66,500 lbf (EASA table lists 67,400 lbf)"
+  engine_bypass_ratio:
+    value: 8.0
+    provenance: PUBLIC
+    source: "Wikipedia GEnx data sheet, takeoff bypass ratio 8.0"
+
+# Inherited unchanged from the JSBSim 747-400 FDM (NOT 747-8 data):
+#   all aerodynamic coefficients/tables, chord, tail areas/arms, moments of inertia,
+#   gear geometry/spring/damping, engine thrust-lapse tables, TSFC, flap/gear kinematics,
+#   control-surface travel limits, yaw damper, CG/AERORP location, engine locations.
+
+limits:
+  mtow_lbs: 987000                 # PUBLIC (Wikipedia 747-8I); design MTOW 975,000 lb also published
+  max_payload_lbs: 167700          # PUBLIC (Wikipedia 747-8I max payload)
+  nominal_cg_x_in: 1327.0          # OTHER_A/C (747-400 FDM CG station)
+  aero_ref_point_x_in: 1377.0      # OTHER_A/C
+  mean_chord_ft: 27.31             # OTHER_A/C
+  payload_station_range_in: [300.0, 2900.0]   # ESTIMATED usable payload x-range along fuselage
+
+# Takeoff configuration applied BEFORE the episode (the agent never handles it).
+takeoff_config:
+  flaps_deg: 20                    # ESTIMATED typical 747 takeoff flap setting; FDM supports 0-30 deg
+  gear_down: true
+  speedbrake: 0.0
+  parking_brake: false
+  pitch_trim_norm: 0.0             # refined by tools/inspect_aircraft.py --trim; see notes
+  preroll_settle_s: 8.0            # seconds spent with wheel brakes held before the episode starts
+
+# Normalised action -> JSBSim command mapping.  Sign conventions are VERIFIED
+# empirically by tools/inspect_aircraft.py --signs (results documented in notes).
+# Agent convention: +elevator = nose-up, +aileron = roll right, +rudder = yaw right.
+actuators:
+  engines: 4                       # one common throttle signal for all engines
+  throttle_range: [0.0, 1.0]       # action [-1,1] -> command [0,1]
+  # VERIFIED with `python tools/inspect_aircraft.py --signs` (JSBSim 1.3.1, 100 KCAS roll):
+  #   elevator-cmd +1 -> nose DOWN (elev -0.35 rad = nose up at cmd -1)  => sign -1
+  #   aileron-cmd  +  -> roll RIGHT                                        => sign +1
+  #   rudder-cmd   +  -> yaw LEFT                                          => sign -1
+  #   steer-cmd    +  -> nose wheel +deg, yaw RIGHT                        => sign +1
+  signs:                           # multiply agent action by this before JSBSim command
+    elevator: -1.0
+    aileron: 1.0
+    rudder: -1.0
+    steer: 1.0
+  # Rate limits in normalised-command units per second (full travel of a
+  # [-1,1] surface = 2.0 units).  Throttle range is [0,1] so 0.5/s = 2 s idle->full.
+  rate_limits_per_s:
+    throttle: 0.5
+    elevator: 1.0
+    aileron: 1.5
+    rudder: 1.5
+  nose_wheel_steering_from_rudder: true   # rudder pedals also command nose-wheel steering (max 5 deg in FDM)
+
+# Engineering limits used by termination / success logic (ESTIMATED, configurable).
+envelope:
+  ground_pitch_limit_deg: 12.0     # tail-strike proxy (FDM has no tail contact point)
+  vr_factor_of_vs: 1.08            # rotation speed estimate = factor * stall estimate
+  v2_factor_of_vs: 1.15            # initial-climb speed estimate = factor * stall estimate
+  clmax_est: 2.2                   # CLmax estimate with takeoff flaps, from FDM tables (alpha peak 1.2 + 0.05*flap_deg)

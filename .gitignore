@@ -1,0 +1,38 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated training output
+**/logs/
+**/runs/
+**/wandb/
+**/tmp/
+**/temp/
+*.tfevents.*
+**/showcase/status.json
+**/showcase/*.lock
+
+# Replay buffers are large generated training state and exceed GitHub limits
+*_replay_buffer.pkl
+*replay-buffer*.pkl
+
+# Local secrets and machine-specific settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+

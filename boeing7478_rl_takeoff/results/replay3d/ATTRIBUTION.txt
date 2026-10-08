@@ -1,0 +1,4 @@
+3D model: 'Boeing747ERF' by manilov.ap
+Source: https://sketchfab.com/3d-models/boeing747erf-5153fd42231a4723a8634e02c4bb008c
+License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+Used only as a visual stand-in in tools/replay_3d.py (scaled to the 747-8 span). It is a 747-400ERF model, not a 747-8, and carries no aerodynamic data.

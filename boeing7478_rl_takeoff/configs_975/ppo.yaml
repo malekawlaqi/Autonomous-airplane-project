@@ -1,0 +1,64 @@
+# PPO - comparison algorithm only (SAC is the primary controller).
+algorithm: PPO
+run_name: ppo
+seed: 0
+device: cpu                # SB3 recommends CPU for PPO with MLP policies
+n_envs: 8
+total_timesteps: 5000000   # RL environment transitions across all envs
+
+learning_rate: 0.0003
+n_steps: 1024              # per env -> rollout of n_envs * n_steps transitions
+batch_size: 256
+n_epochs: 10
+gamma: 0.995
+gae_lambda: 0.95
+clip_range: 0.2
+ent_coef: 0.0
+vf_coef: 0.5
+max_grad_norm: 0.5
+
+policy:
+  actor_layers: [256, 256, 256]
+  critic_layers: [256, 256, 256]
+  activation: relu
+
+evaluation:
+  eval_freq: 25000
+  n_eval_episodes: 20
+  eval_seed_base: 1000000
+  checkpoint_steps: [50000, 100000, 250000, 500000, 1000000, 2000000, 5000000, 10000000]
+  checkpoint_eval_episodes: 50
+  periodic_checkpoint_freq: 50000
+  save_replay_buffer: false
+  success_window_episodes: 100
+  stop_if_no_success:
+    enabled: true
+    after_steps: 500000
+
+curriculum:
+  enabled: true
+  success_threshold: 0.80
+  min_eval_episodes: 20
+  max_level: 5
+
+logging:
+  log_every_steps: 2000
+  progress_bar: false
+
+paths:
+  models_dir: models
+  logs_dir: logs
+  results_dir: results
+
+# Live 3D showcase (tools/live_viewer.py): replayable "events" written during training.
+showcase:
+  enabled: true
+  training_success_always_until: 100    # record EVERY training success until this many were recorded
+  training_success_min_gap_steps: 5000  # afterwards at most one success event per this many transitions
+  progress_min_delta: 0.10              # new best evaluation success rate (+10 points) counts as "big progress"
+  eval_episodes_recorded: 3             # deterministic episodes recorded per progress event
+  update_every_steps: 50000             # a viewer update (deterministic replays + status headline) EVERY this many transitions
+  update_episodes: 2                    # replays recorded per update
+  max_events: 1000
+  save_model_snapshots: true            # models/<run>/showcase_<steps>_<event>.zip at progress events
+

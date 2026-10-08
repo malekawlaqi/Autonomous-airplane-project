@@ -1,0 +1,110 @@
+# Reward configuration.  ALL numerical reward constants live here (none are hidden in Python).
+# Reward is dense, built from the separate components implemented in envs/reward.py:
+#   + progress + centerline + heading + acceleration + rotation + climb + altitude_progress
+#   + stability + success_bonus (incl. time bonus)
+#   - time - lateral - roll - heading - aoa - sideslip - control_oscillation - premature_rotation - failure
+#
+# Time optimisation: the per-step time penalty is deliberately tiny, and the extra "time bonus" is
+# only paid on a VALID, fully-stabilised takeoff.  Faster is therefore only better inside the
+# valid-takeoff constraint set.  These weights are starting values, NOT tuned results.
+
+weights:
+  progress: 0.02              # per metre of forward runway progress
+  centerline: 0.04            # max per step, gated by ground speed
+  heading: 0.03               # max per step, gated by ground speed
+  acceleration: 0.04          # max per step while accelerating before rotation speed
+  rotation: 0.15              # max per step near rotation
+  climb: 0.10                 # max per step after liftoff
+  altitude_progress: 0.04     # per foot gained (capped at the 1000 ft target -> 40 in total)
+  stability: 0.10             # per step inside the success region
+  success_bonus: 100.0
+  success_time_bonus: 50.0    # x (1 - success_time/max_episode_time), paid only on success
+  time_penalty: 0.01          # per RL step (small)
+  lateral_penalty: 0.10       # x (lateral/half_width)^2 per step
+  roll_penalty: 0.10
+  heading_penalty: 0.05
+  aoa_penalty: 0.10
+  sideslip_penalty: 0.05
+  control_oscillation_penalty: 0.02   # x sum over channels of (normalised actuator step)^2
+  premature_rotation_penalty: 0.05
+
+  # ---- passenger-comfort / clean-trajectory terms (profile 'clean'; zeroed by profile 'baseline') ----
+  clean_centerline: 0.10               # max per step: tight gaussian around the centerline (gated by ground speed)
+  lateral_rate_penalty: 0.04           # sideways velocity (swaying left/right)
+  lateral_accel_penalty: 0.04          # sideways acceleration (what passengers feel)
+  yaw_rate_penalty: 0.03               # nose swinging left/right
+  roll_rate_penalty: 0.02              # wing rocking
+  clean_takeoff_bonus: 150.0           # x cleanliness (0..1) of the whole trajectory, paid ONLY on a valid takeoff
+
+shaping:
+  aero_gate_airspeed_kt: 50.0       # AoA/sideslip penalties are only applied above this airspeed
+  speed_gate_mps: 20.0              # alignment rewards ramp from 0 to full as ground speed reaches this
+  centerline_scale_m: 5.0           # exp(-(y/scale)^2)
+  heading_scale_deg: 5.0
+  accel_target_mps2: 1.5            # acceleration giving full acceleration reward
+  rotation_speed_margin_kt: 5.0     # rotation reward active from (VR_est - margin)
+  pitch_target_deg: 10.0            # initial-climb pitch attitude
+  pitch_rate_gain_per_s: 0.5        # desired q = gain * (pitch_target - pitch)
+  pitch_rate_min_dps: -1.0
+  pitch_rate_max_dps: 3.0           # controlled rotation rate (deg/s)
+  pitch_rate_tolerance_dps: 2.0
+  climb_target_fpm: 1500.0
+  roll_deadband_deg: 3.0
+  roll_scale_deg: 10.0
+  heading_deadband_deg: 3.0
+  heading_penalty_scale_deg: 10.0
+  aoa_soft_limit_deg: 10.0
+  aoa_scale_deg: 3.0
+  beta_deadband_deg: 2.0
+  beta_scale_deg: 5.0
+  premature_pitch_deg: 3.0          # pitch above this before VR is penalised
+  premature_speed_margin_kt: 10.0
+  premature_scale_deg: 3.0
+  clean_centerline_scale_m: 2.0       # exp(-(y/scale)^2): reward only when really close to the centerline
+  lateral_rate_deadband_mps: 0.1
+  lateral_rate_scale_mps: 0.5
+  lateral_accel_deadband_mps2: 0.05
+  lateral_accel_scale_mps2: 0.3        # ~0.03 g
+  yaw_rate_deadband_dps: 0.5
+  yaw_rate_scale_dps: 2.0
+  roll_rate_deadband_dps: 1.0
+  roll_rate_scale_dps: 3.0
+  # trajectory cleanliness = exp(-mean((statistic/scale)^2)) over these four episode statistics
+  clean_rms_lateral_scale_m: 6.0
+  clean_max_lateral_scale_m: 15.0
+  clean_lateral_accel_scale_mps2: 0.5
+  clean_max_roll_scale_deg: 10.0
+  penalty_term_cap: 4.0             # cap on each squared-error penalty term (limits reward spikes)
+
+# Terminal penalties (positive numbers, subtracted on that failure reason).
+failure_penalties:
+  CRASH: 100.0
+  RUNWAY_EXCURSION: 60.0
+  LOSS_OF_CONTROL: 80.0
+  INSUFFICIENT_RUNWAY: 50.0
+  FAILED_ROTATION: 50.0
+  UNSTABLE_AFTER_LIFTOFF: 70.0
+  SIMULATOR_INVALID_STATE: 50.0
+  ENVELOPE_VIOLATION: 50.0
+  FAILED_TO_ACCELERATE: 30.0
+  UNCLEAN_TAKEOFF: 30.0         # reached the target altitude stably but the trajectory was not clean enough
+  TIMEOUT: 10.0
+
+
+
+# Reward profile.  'clean' = passenger-comfort reward (default).  'baseline' = the ORIGINAL reward (all comfort terms
+# off) - use it to resume/compare the early runs (sac_pilot, sac_teacher_prev) that were trained before the comfort
+# terms existed.  Changing the profile changes the learning problem: start a NEW run name when you do.
+profile: clean
+profiles:
+  baseline:
+    weights:
+      clean_centerline: 0.0
+      lateral_rate_penalty: 0.0
+      lateral_accel_penalty: 0.0
+      yaw_rate_penalty: 0.0
+      roll_rate_penalty: 0.0
+      clean_takeoff_bonus: 0.0
+  clean: {}
+
+

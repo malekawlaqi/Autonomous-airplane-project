@@ -1,0 +1,33 @@
+{
+  "physics": {
+    "physics_steps_per_s": 174714.7294327619,
+    "simulated_seconds_per_wall_second": 1455.9560786063491
+  },
+  "environment": {
+    "env_transitions_per_s": 4881.481477636482,
+    "episodes_reset": 42.0,
+    "ms_per_transition": 0.2048558423464879
+  },
+  "training": [
+    {
+      "device": "cpu",
+      "updates_per_s": 63.26099284216153,
+      "gpu_util_mean_pct": 32.22222222222222,
+      "gpu_util_max_pct": 35.0,
+      "gpu_mem_peak_mb": 2116.0,
+      "learn_loop_transitions_per_s": 47.72977053456702,
+      "bottleneck": "neural-network updates",
+      "ms_per_update": 15.807529333202789
+    },
+    {
+      "device": "cuda",
+      "updates_per_s": 139.61747881624643,
+      "gpu_util_mean_pct": 28.0,
+      "gpu_util_max_pct": 31.0,
+      "gpu_mem_peak_mb": 2361.0,
+      "learn_loop_transitions_per_s": 112.06311884884641,
+      "bottleneck": "neural-network updates",
+      "ms_per_update": 7.162427000390986
+    }
+  ]
+}

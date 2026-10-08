@@ -1,0 +1,45 @@
+{
+  "num_timesteps": 100000,
+  "curriculum": {
+    "level": 1,
+    "history": [
+      {
+        "timesteps": 25000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 50000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 75000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      },
+      {
+        "timesteps": 100000.0,
+        "level": 1.0,
+        "eval_success_rate": 0.0,
+        "advanced": 0.0
+      }
+    ]
+  },
+  "milestones": {
+    "steps_to_first_success": null,
+    "steps_to_first_success_eval": null,
+    "first_success_level": null,
+    "steps_to_10_percent_success": null,
+    "steps_to_50_percent_success": null,
+    "steps_to_90_percent_success": null,
+    "eval_steps_to_10_percent_success": null,
+    "eval_steps_to_50_percent_success": null,
+    "eval_steps_to_90_percent_success": null,
+    "success_window_episodes": 100,
+    "unit": "RL environment transitions"
+  }
+}
