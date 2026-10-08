@@ -1,0 +1,9 @@
+# Keep finished reports and model archives byte-for-byte unchanged in Git.
+*.pdf binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.glb binary
+*.npz binary
+*.pkl binary
